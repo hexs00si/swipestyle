@@ -1,0 +1,40 @@
+2025-05-08 11:55:54,602 - __main__ - INFO - Starting comprehensive environment test...
+2025-05-08 11:55:54,603 - __main__ - INFO - 
+=== System Information ===
+2025-05-08 11:55:54,603 - __main__ - INFO - Python: 3.11.5 (main, Sep 11 2023, 08:17:37) [Clang 14.0.6 ]
+2025-05-08 11:55:54,603 - __main__ - INFO - PyTorch: 2.7.0
+2025-05-08 11:55:54,603 - __main__ - INFO - NumPy: 2.2.5
+2025-05-08 11:55:54,603 - __main__ - INFO - Pandas: 2.2.3
+2025-05-08 11:55:54,603 - __main__ - INFO - 
+=== Hardware Acceleration ===
+2025-05-08 11:55:54,618 - __main__ - INFO - CUDA: False
+2025-05-08 11:55:54,618 - __main__ - INFO - MPS: True
+2025-05-08 11:55:54,618 - __main__ - INFO - MPS Built: True
+2025-05-08 11:55:54,618 - __main__ - INFO - Using device: mps
+2025-05-08 11:55:54,618 - __main__ - INFO - 
+=== Tensor Operations Test ===
+2025-05-08 11:55:54,718 - __main__ - INFO - Tensor operations working correctly on mps
+2025-05-08 11:55:54,807 - __main__ - INFO - 
+=== Image Processing Test ===
+2025-05-08 11:55:54,807 - __main__ - INFO - PIL working correctly
+2025-05-08 11:55:54,809 - __main__ - INFO - Image conversion working
+2025-05-08 11:55:54,809 - __main__ - INFO - 
+=== Cloudinary Test ===
+2025-05-08 11:55:56,124 - __main__ - INFO - Cloudinary ping successful: {'status': 'ok'}
+2025-05-08 11:55:56,124 - src.utils.cloudinary_helper - INFO - Cloudinary configured successfully
+2025-05-08 11:55:56,124 - __main__ - INFO - CloudinaryHelper initialized
+2025-05-08 11:55:56,124 - __main__ - INFO - 
+=== Fashion Model Test ===
+2025-05-08 11:55:58,429 - __main__ - INFO - Loading DINOv2 model components...
+2025-05-08 11:56:01,003 - __main__ - INFO - Model loaded successfully
+2025-05-08 11:56:01,155 - __main__ - INFO - Running inference...
+2025-05-08 11:56:01,230 - __main__ - INFO - Feature extraction successful. Output shape: torch.Size([1, 257, 384])
+2025-05-08 11:56:01,233 - __main__ - INFO - Memory management working
+2025-05-08 11:56:01,233 - __main__ - INFO - 
+=== Test Summary ===
+2025-05-08 11:56:01,233 - __main__ - INFO - Tensor Operations: PASSED
+2025-05-08 11:56:01,233 - __main__ - INFO - Image Processing: PASSED
+2025-05-08 11:56:01,233 - __main__ - INFO - Cloudinary: PASSED
+2025-05-08 11:56:01,233 - __main__ - INFO - Fashion Model: PASSED
+2025-05-08 11:56:01,233 - __main__ - INFO - 
+Environment test completed successfully!

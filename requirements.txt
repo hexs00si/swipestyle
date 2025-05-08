@@ -1,0 +1,29 @@
+# Core dependencies
+numpy>=1.24.0
+pandas>=2.0.0
+Pillow>=9.5.0
+scikit-learn>=1.2.2
+tqdm>=4.65.0
+
+# Deep learning - specific versions for MPS compatibility
+torch>=2.2.0  # Minimum version for stable MPS support
+transformers>=4.34.0
+accelerate>=0.24.0  # Helps with device management
+
+# API and web
+fastapi>=0.95.0
+uvicorn>=0.22.0
+python-multipart>=0.0.6
+streamlit>=1.22.0
+requests>=2.29.0
+
+# Data access
+kaggle>=1.5.13
+
+# Data management
+cloudinary>=1.33.0
+python-dotenv>=1.0.0
+pydantic>=1.10.8
+
+# Additional for MPS optimization
+psutil>=5.9.0  # For memory monitoring
