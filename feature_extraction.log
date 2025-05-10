@@ -1,0 +1,12 @@
+2025-05-11 00:03:19,972 - __main__ - INFO - Initializing feature extractor...
+2025-05-11 00:03:19,972 - src.models.feature_extractor - INFO - Initializing feature extractor with model: facebook/dinov2-small
+2025-05-11 00:03:19,984 - src.models.feature_extractor - INFO - Using device: mps
+2025-05-11 00:03:23,465 - src.models.feature_extractor - INFO - Model loaded successfully. Feature dimension: 384
+2025-05-11 00:03:23,465 - __main__ - INFO - Loading metadata from /Users/sushi/Desktop/swipestyle/data/processed/metadata.csv
+2025-05-11 00:03:23,518 - __main__ - INFO - Sampled 20 items for processing
+2025-05-11 00:03:23,518 - __main__ - INFO - Processing 20 items...
+2025-05-11 00:03:23,824 - __main__ - INFO - Results saved to /Users/sushi/Desktop/swipestyle/data/deployment
+2025-05-11 00:03:23,824 - __main__ - INFO - JSON file size: 0.15 MB
+2025-05-11 00:03:23,824 - __main__ - INFO - Processing completed in 3.85 seconds
+2025-05-11 00:03:23,824 - __main__ - INFO - Successfully processed: 20 items
+2025-05-11 00:03:23,824 - __main__ - INFO - Failed: 0 items
