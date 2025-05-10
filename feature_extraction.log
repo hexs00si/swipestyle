@@ -24,3 +24,35 @@
 2025-05-11 00:05:16,233 - __main__ - INFO - Processing completed in 29.73 seconds
 2025-05-11 00:05:16,233 - __main__ - INFO - Successfully processed: 20 items
 2025-05-11 00:05:16,233 - __main__ - INFO - Failed: 0 items
+2025-05-11 00:50:20,747 - __main__ - INFO - Initializing feature extractor...
+2025-05-11 00:50:20,747 - src.models.feature_extractor - INFO - Initializing feature extractor with model: facebook/dinov2-small
+2025-05-11 00:50:20,760 - src.models.feature_extractor - INFO - Using device: mps
+2025-05-11 00:50:23,733 - src.models.feature_extractor - INFO - Model loaded successfully. Feature dimension: 384
+2025-05-11 00:50:23,733 - __main__ - INFO - Loading metadata from /Users/sushi/Desktop/swipestyle/data/processed/metadata.csv
+2025-05-11 00:50:23,786 - __main__ - INFO - Sampled 1000 items for processing
+2025-05-11 00:50:23,787 - __main__ - INFO - Processing 1000 items...
+2025-05-11 00:50:24,472 - __main__ - INFO - Checkpoint saved at 50 items
+2025-05-11 00:50:25,137 - __main__ - INFO - Checkpoint saved at 100 items
+2025-05-11 00:50:25,844 - __main__ - INFO - Checkpoint saved at 150 items
+2025-05-11 00:50:26,567 - __main__ - INFO - Checkpoint saved at 200 items
+2025-05-11 00:50:27,318 - __main__ - INFO - Checkpoint saved at 250 items
+2025-05-11 00:50:28,111 - __main__ - INFO - Checkpoint saved at 300 items
+2025-05-11 00:50:28,921 - __main__ - INFO - Checkpoint saved at 350 items
+2025-05-11 00:50:29,750 - __main__ - INFO - Checkpoint saved at 400 items
+2025-05-11 00:50:30,613 - __main__ - INFO - Checkpoint saved at 450 items
+2025-05-11 00:50:31,507 - __main__ - INFO - Checkpoint saved at 500 items
+2025-05-11 00:50:32,447 - __main__ - INFO - Checkpoint saved at 550 items
+2025-05-11 00:50:33,392 - __main__ - INFO - Checkpoint saved at 600 items
+2025-05-11 00:50:34,376 - __main__ - INFO - Checkpoint saved at 650 items
+2025-05-11 00:50:35,384 - __main__ - INFO - Checkpoint saved at 700 items
+2025-05-11 00:50:36,415 - __main__ - INFO - Checkpoint saved at 750 items
+2025-05-11 00:50:37,564 - __main__ - INFO - Checkpoint saved at 800 items
+2025-05-11 00:50:38,649 - __main__ - INFO - Checkpoint saved at 850 items
+2025-05-11 00:50:39,749 - __main__ - INFO - Checkpoint saved at 900 items
+2025-05-11 00:50:40,898 - __main__ - INFO - Checkpoint saved at 950 items
+2025-05-11 00:50:42,071 - __main__ - INFO - Checkpoint saved at 1000 items
+2025-05-11 00:50:42,289 - __main__ - INFO - Results saved to /Users/sushi/Desktop/swipestyle/data/deployment
+2025-05-11 00:50:42,289 - __main__ - INFO - JSON file size: 7.67 MB
+2025-05-11 00:50:42,289 - __main__ - INFO - Processing completed in 21.54 seconds
+2025-05-11 00:50:42,289 - __main__ - INFO - Successfully processed: 1000 items
+2025-05-11 00:50:42,289 - __main__ - INFO - Failed: 0 items
