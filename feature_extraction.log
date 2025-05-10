@@ -10,3 +10,17 @@
 2025-05-11 00:03:23,824 - __main__ - INFO - Processing completed in 3.85 seconds
 2025-05-11 00:03:23,824 - __main__ - INFO - Successfully processed: 20 items
 2025-05-11 00:03:23,824 - __main__ - INFO - Failed: 0 items
+2025-05-11 00:04:46,503 - __main__ - INFO - Initializing feature extractor...
+2025-05-11 00:04:46,503 - src.models.feature_extractor - INFO - Initializing feature extractor with model: facebook/dinov2-small
+2025-05-11 00:04:46,514 - src.models.feature_extractor - INFO - Using device: mps
+2025-05-11 00:04:49,720 - src.models.feature_extractor - INFO - Model loaded successfully. Feature dimension: 384
+2025-05-11 00:04:49,721 - src.utils.cloudinary_helper - INFO - Cloudinary configured successfully
+2025-05-11 00:04:49,721 - __main__ - INFO - Cloudinary initialized successfully
+2025-05-11 00:04:49,721 - __main__ - INFO - Loading metadata from /Users/sushi/Desktop/swipestyle/data/processed/metadata.csv
+2025-05-11 00:04:49,772 - __main__ - INFO - Sampled 20 items for processing
+2025-05-11 00:04:49,773 - __main__ - INFO - Processing 20 items...
+2025-05-11 00:05:16,232 - __main__ - INFO - Results saved to /Users/sushi/Desktop/swipestyle/data/deployment
+2025-05-11 00:05:16,233 - __main__ - INFO - JSON file size: 0.16 MB
+2025-05-11 00:05:16,233 - __main__ - INFO - Processing completed in 29.73 seconds
+2025-05-11 00:05:16,233 - __main__ - INFO - Successfully processed: 20 items
+2025-05-11 00:05:16,233 - __main__ - INFO - Failed: 0 items
