@@ -1,316 +1,199 @@
+# scripts/extract_features.py
 import os
-import sys
-import json
-import pickle
-import logging
-import time
-from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
-from dataclasses import dataclass, asdict
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import hashlib
+import pickle
+import json
+import logging
+import sys
+import time
+from pathlib import Path
 
 # Add project root to path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from src.config import (
-    PROCESSED_DATA_DIR, 
-    DEPLOYMENT_DATA_DIR, 
-    SUBSET_SIZE, 
-    METADATA_CSV_PATH
-)
+from src.config import PROCESSED_DATA_DIR, DEPLOYMENT_DATA_DIR, SUBSET_SIZE, METADATA_CSV_PATH
 from src.models.feature_extractor import FeatureExtractor
 from src.utils.cloudinary_helper import CloudinaryHelper
 
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('feature_extraction.log')
-    ]
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-@dataclass
-class ProcessingState:
-    """Track the state of feature extraction process"""
-    processed_ids: List[str]
-    failed_ids: List[str]
-    features_dict: Dict[str, List[float]]
-    metadata_dict: Dict[str, Dict[str, Any]]
-    cloudinary_urls: Dict[str, str]
-    last_checkpoint: int
+def extract_and_save_features(
+    metadata_path=METADATA_CSV_PATH, 
+    output_dir=DEPLOYMENT_DATA_DIR, 
+    subset_size=SUBSET_SIZE, 
+    upload_to_cloudinary=False
+):
+    """
+    Extract features from fashion dataset
     
-    def save(self, filepath: str):
-        """Save state to file"""
-        with open(filepath, 'w') as f:
-            json.dump(asdict(self), f)
+    Args:
+        metadata_path: Path to metadata CSV file
+        output_dir: Directory to save extracted features
+        subset_size: Number of items to process (0 means all)
+        upload_to_cloudinary: Whether to upload images to Cloudinary
+    """
+    logger.info("Starting feature extraction...")
+    start_time = time.time()
     
-    @classmethod
-    def load(cls, filepath: str) -> 'ProcessingState':
-        """Load state from file"""
-        with open(filepath, 'r') as f:
-            data = json.load(f)
-        return cls(**data)
-
-class FeatureExtractionPipeline:
-    """Enhanced pipeline for feature extraction with resume capability"""
+    # Create output directory
+    os.makedirs(output_dir, exist_ok=True)
     
-    def __init__(self, 
-                 metadata_path: str = str(METADATA_CSV_PATH),
-                 output_dir: str = str(DEPLOYMENT_DATA_DIR),
-                 subset_size: int = SUBSET_SIZE,
-                 batch_size: int = 10,
-                 checkpoint_interval: int = 50):
-        
-        self.metadata_path = Path(metadata_path)
-        self.output_dir = Path(output_dir)
-        self.subset_size = subset_size
-        self.batch_size = batch_size
-        self.checkpoint_interval = checkpoint_interval
-        
-        # Create output directory
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Initialize components
-        self.extractor = None
-        self.cloudinary_helper = None
-        
-        # State tracking
-        self.state_file = self.output_dir / 'extraction_state.json'
-        self.state = self._load_or_create_state()
+    # Load metadata
+    logger.info(f"Loading metadata from {metadata_path}")
+    metadata_df = pd.read_csv(metadata_path)
+    total_items = len(metadata_df)
+    logger.info(f"Loaded metadata with {total_items} items")
     
-    def _load_or_create_state(self) -> ProcessingState:
-        """Load existing state or create new one"""
-        if self.state_file.exists():
-            logger.info(f"Loading existing state from {self.state_file}")
-            return ProcessingState.load(self.state_file)
-        else:
-            return ProcessingState(
-                processed_ids=[],
-                failed_ids=[],
-                features_dict={},
-                metadata_dict={},
-                cloudinary_urls={},
-                last_checkpoint=0
-            )
+    # Apply subset if specified
+    if subset_size > 0 and subset_size < total_items:
+        metadata_df = metadata_df.sample(n=subset_size, random_state=42)
+        logger.info(f"Selected subset of {subset_size} items")
+    else:
+        logger.info(f"Processing full dataset: {total_items} items")
     
-    def _initialize_components(self, use_cloudinary: bool = True):
-        """Initialize ML models and cloud services"""
-        # Initialize feature extractor
-        logger.info("Initializing feature extractor...")
-        self.extractor = FeatureExtractor()
-        
-        # Initialize Cloudinary
-        if use_cloudinary:
-            try:
-                self.cloudinary_helper = CloudinaryHelper()
-                logger.info("Cloudinary initialized successfully")
-            except Exception as e:
-                logger.warning(f"Cloudinary initialization failed: {e}")
-                self.cloudinary_helper = None
+    # Initialize components
+    logger.info("Initializing feature extractor...")
+    extractor = FeatureExtractor()
     
-    def _load_dataset(self) -> pd.DataFrame:
-        """Load and prepare dataset"""
-        # Load metadata
-        logger.info(f"Loading metadata from {self.metadata_path}")
-        metadata_df = pd.read_csv(self.metadata_path)
-        
-        # Filter out already processed items
-        if self.state.processed_ids:
-            logger.info(f"Filtering out {len(self.state.processed_ids)} already processed items")
-            metadata_df = metadata_df[~metadata_df['id'].astype(str).isin(self.state.processed_ids)]
-        
-        # Sample if necessary
-        if len(metadata_df) > self.subset_size:
-            metadata_df = metadata_df.sample(n=self.subset_size, random_state=42)
-            logger.info(f"Sampled {self.subset_size} items for processing")
-        
-        return metadata_df
+    # Initialize Cloudinary if requested
+    cloudinary_helper = None
+    if upload_to_cloudinary:
+        try:
+            cloudinary_helper = CloudinaryHelper()
+            logger.info("Cloudinary initialized successfully")
+        except Exception as e:
+            logger.warning(f"Cloudinary initialization failed: {e}")
+            logger.warning("Continuing without Cloudinary upload")
     
-    def _process_single_item(self, row: pd.Series) -> Tuple[str, Dict[str, Any]]:
-        """Process a single fashion item"""
+    # Initialize storage
+    features_dict = {}
+    metadata_dict = {}
+    cloudinary_urls = {}
+    failed_items = []
+    
+    # Process each item
+    for idx, row in tqdm(metadata_df.iterrows(), total=len(metadata_df), desc="Extracting features"):
         product_id = str(row['id'])
         image_path = os.path.join(PROCESSED_DATA_DIR, "images", row['filename'])
         
         try:
             # Extract features
-            features = self.extractor.extract_features(image_path)
+            features = extractor.extract_features(image_path)
+            features_dict[product_id] = features.tolist()  # Convert numpy array to list for JSON
             
-            # Upload to Cloudinary if available
+            # Upload to Cloudinary if enabled
             image_url = f"/image/{product_id}"  # Default local URL
-            if self.cloudinary_helper:
+            if cloudinary_helper:
                 try:
-                    image_url = self.cloudinary_helper.upload_image(
+                    cloud_url = cloudinary_helper.upload_image(
                         image_path, 
                         public_id=product_id,
                         folder="fashion-recommender"
                     )
-                    self.state.cloudinary_urls[product_id] = image_url
+                    cloudinary_urls[product_id] = cloud_url
+                    image_url = cloud_url
+                    
+                    # Small delay to avoid rate limiting
+                    time.sleep(0.1)
                 except Exception as e:
                     logger.warning(f"Cloudinary upload failed for {product_id}: {e}")
             
-            # Create metadata
-            metadata = {
+            # Store metadata
+            metadata_dict[product_id] = {
                 'id': product_id,
-                'product_name': row.get('product_name', row.get('productDisplayName', '')),
-                'gender': row['gender'],
-                'category': row.get('master_category', row.get('masterCategory', '')),
-                'subcategory': row.get('sub_category', row.get('subCategory', '')),
-                'article_type': row.get('article_type', row.get('articleType', '')),
-                'color': row.get('base_color', row.get('baseColour', '')),
+                'product_name': row.get('product_name', ''),
+                'gender': row.get('gender', ''),
+                'category': row.get('master_category', ''),
+                'subcategory': row.get('sub_category', ''),
+                'article_type': row.get('article_type', ''),
+                'color': row.get('base_color', ''),
                 'filename': row['filename'],
                 'image_url': image_url
             }
             
-            # Store results
-            self.state.features_dict[product_id] = features.tolist()
-            self.state.metadata_dict[product_id] = metadata
-            self.state.processed_ids.append(product_id)
-            
-            return product_id, metadata
-            
+            # Save checkpoint every 100 items
+            if len(features_dict) % 100 == 0:
+                save_checkpoint(features_dict, metadata_dict, cloudinary_urls, output_dir)
+                
         except Exception as e:
             logger.error(f"Error processing product {product_id}: {e}")
-            self.state.failed_ids.append(product_id)
-            raise
+            failed_items.append(product_id)
     
-    def _save_checkpoint(self):
-        """Save current state as checkpoint"""
-        self.state.last_checkpoint = len(self.state.processed_ids)
-        self.state.save(self.state_file)
-        
-        # Save intermediate results
-        checkpoint_data = {
-            'features': self.state.features_dict,
-            'metadata': self.state.metadata_dict,
-            'cloudinary_urls': self.state.cloudinary_urls
-        }
-        
-        checkpoint_path = self.output_dir / f'checkpoint_{self.state.last_checkpoint}.json'
-        with open(checkpoint_path, 'w') as f:
-            json.dump(checkpoint_data, f)
-        
-        logger.info(f"Checkpoint saved at {len(self.state.processed_ids)} items")
+    # Save final results
+    save_final_results(features_dict, metadata_dict, cloudinary_urls, output_dir)
     
-    def process_dataset(self, use_cloudinary: bool = True, parallel: bool = False):
-        """Process the entire dataset"""
-        start_time = time.time()
-        
-        # Initialize components
-        self._initialize_components(use_cloudinary)
-        
-        # Load dataset
-        metadata_df = self._load_dataset()
-        
-        if len(metadata_df) == 0:
-            logger.info("No items to process")
-            return
-        
-        logger.info(f"Processing {len(metadata_df)} items...")
-        
-        # Process items
-        if parallel and self.cloudinary_helper is None:
-            # Parallel processing (only for local feature extraction)
-            self._process_parallel(metadata_df)
-        else:
-            # Sequential processing (required for Cloudinary uploads)
-            self._process_sequential(metadata_df)
-        
-        # Save final results
-        self._save_final_results()
-        
-        elapsed_time = time.time() - start_time
-        logger.info(f"Processing completed in {elapsed_time:.2f} seconds")
-        logger.info(f"Successfully processed: {len(self.state.processed_ids)} items")
-        logger.info(f"Failed: {len(self.state.failed_ids)} items")
+    # Print summary
+    elapsed_time = time.time() - start_time
+    logger.info(f"Processing completed in {elapsed_time:.2f} seconds")
+    logger.info(f"Successfully processed: {len(features_dict)} items")
+    logger.info(f"Failed: {len(failed_items)} items")
+    if failed_items:
+        logger.info(f"Failed items: {failed_items[:10]}...")  # Show first 10 failed items
     
-    def _process_sequential(self, metadata_df: pd.DataFrame):
-        """Process items sequentially"""
-        for idx, row in tqdm(metadata_df.iterrows(), total=len(metadata_df), desc="Processing"):
-            try:
-                self._process_single_item(row)
-                
-                # Save checkpoint periodically
-                if len(self.state.processed_ids) % self.checkpoint_interval == 0:
-                    self._save_checkpoint()
-                    
-            except Exception as e:
-                logger.error(f"Error processing row {idx}: {e}")
-                continue
-    
-    def _process_parallel(self, metadata_df: pd.DataFrame):
-        """Process items in parallel (for local extraction only)"""
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            futures = []
-            for idx, row in metadata_df.iterrows():
-                future = executor.submit(self._process_single_item, row)
-                futures.append(future)
-            
-            # Process results as they complete
-            for future in tqdm(as_completed(futures), total=len(futures), desc="Processing"):
-                try:
-                    result = future.result()
-                    
-                    # Save checkpoint periodically
-                    if len(self.state.processed_ids) % self.checkpoint_interval == 0:
-                        self._save_checkpoint()
-                        
-                except Exception as e:
-                    logger.error(f"Error in parallel processing: {e}")
-    
-    def _save_final_results(self):
-        """Save final processed data in multiple formats"""
-        # Save as JSON
-        json_data = {
-            'features': self.state.features_dict,
-            'metadata': self.state.metadata_dict,
-            'cloudinary_urls': self.state.cloudinary_urls
-        }
-        
-        json_path = self.output_dir / 'fashion_data.json'
-        with open(json_path, 'w') as f:
-            json.dump(json_data, f)
-        
-        # Save metadata separately
-        metadata_path = self.output_dir / 'metadata.json'
-        with open(metadata_path, 'w') as f:
-            json.dump(self.state.metadata_dict, f)
-        
-        # Save features as pickle
-        features_np = {k: np.array(v) for k, v in self.state.features_dict.items()}
-        pickle_path = self.output_dir / 'features.pkl'
-        with open(pickle_path, 'wb') as f:
-            pickle.dump(features_np, f)
-        
-        # Save metadata as pickle
-        metadata_pickle_path = self.output_dir / 'metadata.pkl'
-        with open(metadata_pickle_path, 'wb') as f:
-            pickle.dump(self.state.metadata_dict, f)
-        
-        # Calculate and save statistics
-        stats = {
-            'total_processed': len(self.state.processed_ids),
-            'total_failed': len(self.state.failed_ids),
-            'feature_dimension': len(next(iter(self.state.features_dict.values()))) if self.state.features_dict else 0,
-            'json_size_mb': os.path.getsize(json_path) / (1024 * 1024),
-            'processing_date': time.strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        stats_path = self.output_dir / 'extraction_stats.json'
-        with open(stats_path, 'w') as f:
-            json.dump(stats, f, indent=2)
-        
-        logger.info(f"Results saved to {self.output_dir}")
-        logger.info(f"JSON file size: {stats['json_size_mb']:.2f} MB")
+    return features_dict, metadata_dict, cloudinary_urls
 
-def main():
-    """Main entry point"""
+def save_checkpoint(features_dict, metadata_dict, cloudinary_urls, output_dir):
+    """Save intermediate checkpoint"""
+    checkpoint_data = {
+        'features': features_dict,
+        'metadata': metadata_dict,
+        'cloudinary_urls': cloudinary_urls
+    }
+    
+    checkpoint_path = os.path.join(output_dir, f'checkpoint_{len(features_dict)}.json')
+    with open(checkpoint_path, 'w') as f:
+        json.dump(checkpoint_data, f)
+    
+    logger.info(f"Checkpoint saved: {len(features_dict)} items processed")
+
+def save_final_results(features_dict, metadata_dict, cloudinary_urls, output_dir):
+    """Save final processed data in multiple formats"""
+    # Save as JSON
+    json_data = {
+        'features': features_dict,
+        'metadata': metadata_dict,
+        'cloudinary_urls': cloudinary_urls
+    }
+    
+    json_path = os.path.join(output_dir, 'fashion_data.json')
+    with open(json_path, 'w') as f:
+        json.dump(json_data, f)
+    
+    # Save metadata separately
+    metadata_path = os.path.join(output_dir, 'metadata.json')
+    with open(metadata_path, 'w') as f:
+        json.dump(metadata_dict, f)
+    
+    # Save Cloudinary URLs
+    if cloudinary_urls:
+        urls_path = os.path.join(output_dir, 'cloudinary_urls.json')
+        with open(urls_path, 'w') as f:
+            json.dump(cloudinary_urls, f)
+    
+    # Save features as pickle (numpy arrays)
+    features_np = {k: np.array(v) for k, v in features_dict.items()}
+    pickle_path = os.path.join(output_dir, 'features.pkl')
+    with open(pickle_path, 'wb') as f:
+        pickle.dump(features_np, f)
+    
+    # Save metadata as pickle
+    metadata_pickle_path = os.path.join(output_dir, 'metadata.pkl')
+    with open(metadata_pickle_path, 'wb') as f:
+        pickle.dump(metadata_dict, f)
+    
+    # File size info
+    json_size = os.path.getsize(json_path) / (1024 * 1024)
+    logger.info(f"Results saved to {output_dir}")
+    logger.info(f"JSON file size: {json_size:.2f} MB")
+
+if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="Extract features for fashion recommendation")
@@ -319,31 +202,15 @@ def main():
     parser.add_argument("--output_dir", type=str, default=str(DEPLOYMENT_DATA_DIR),
                         help="Directory to save deployment files")
     parser.add_argument("--subset_size", type=int, default=SUBSET_SIZE,
-                        help="Number of items to include in the subset")
-    parser.add_argument("--batch_size", type=int, default=10,
-                        help="Batch size for processing")
+                        help="Number of items to process (0 for all)")
     parser.add_argument("--upload_to_cloudinary", action="store_true",
-                        help="Whether to upload images to Cloudinary")
-    parser.add_argument("--parallel", action="store_true",
-                        help="Use parallel processing (only for local extraction)")
-    parser.add_argument("--resume", action="store_true",
-                        help="Resume from last checkpoint")
+                        help="Upload images to Cloudinary")
     
     args = parser.parse_args()
     
-    # Create pipeline
-    pipeline = FeatureExtractionPipeline(
+    extract_and_save_features(
         metadata_path=args.metadata_path,
         output_dir=args.output_dir,
         subset_size=args.subset_size,
-        batch_size=args.batch_size
+        upload_to_cloudinary=args.upload_to_cloudinary
     )
-    
-    # Process dataset
-    pipeline.process_dataset(
-        use_cloudinary=args.upload_to_cloudinary,
-        parallel=args.parallel and not args.upload_to_cloudinary
-    )
-
-if __name__ == "__main__":
-    main()

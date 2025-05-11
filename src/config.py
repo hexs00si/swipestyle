@@ -37,7 +37,7 @@ UI_PORT = int(os.getenv("UI_PORT", "8501"))  # Streamlit default port
 
 # Model settings
 MODEL_NAME = os.getenv("MODEL_NAME", "facebook/dinov2-small")  # Default model
-SUBSET_SIZE = int(os.getenv("SUBSET_SIZE", "500"))  # Number of products to use
+SUBSET_SIZE = int(os.getenv("SUBSET_SIZE", "0"))  # Number of products to use
 
 # File paths for important data files
 METADATA_CSV_PATH = PROCESSED_DATA_DIR / "metadata.csv"

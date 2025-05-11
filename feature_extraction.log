@@ -56,3 +56,12 @@
 2025-05-11 00:50:42,289 - __main__ - INFO - Processing completed in 21.54 seconds
 2025-05-11 00:50:42,289 - __main__ - INFO - Successfully processed: 1000 items
 2025-05-11 00:50:42,289 - __main__ - INFO - Failed: 0 items
+2025-05-11 13:26:22,136 - __main__ - INFO - Initializing feature extractor...
+2025-05-11 13:26:22,137 - src.models.feature_extractor - INFO - Initializing feature extractor with model: facebook/dinov2-small
+2025-05-11 13:26:22,149 - src.models.feature_extractor - INFO - Using device: mps
+2025-05-11 13:26:24,567 - src.models.feature_extractor - INFO - Model loaded successfully. Feature dimension: 384
+2025-05-11 13:26:24,567 - src.utils.cloudinary_helper - INFO - Cloudinary configured successfully
+2025-05-11 13:26:24,567 - __main__ - INFO - Cloudinary initialized successfully
+2025-05-11 13:26:24,567 - __main__ - INFO - Loading metadata from /Users/sushi/Desktop/swipestyle/data/processed/metadata.csv
+2025-05-11 13:26:24,618 - __main__ - INFO - Sampled 500 items for processing
+2025-05-11 13:26:24,618 - __main__ - INFO - Processing 500 items...
