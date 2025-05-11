@@ -38,3 +38,65 @@
 2025-05-08 11:56:01,233 - __main__ - INFO - Fashion Model: PASSED
 2025-05-08 11:56:01,233 - __main__ - INFO - 
 Environment test completed successfully!
+2025-05-11 14:45:25,315 - __main__ - INFO - Starting comprehensive environment test...
+2025-05-11 14:45:25,315 - __main__ - INFO - 
+=== System Information ===
+2025-05-11 14:45:25,315 - __main__ - INFO - Python: 3.11.5 (main, Sep 11 2023, 08:17:37) [Clang 14.0.6 ]
+2025-05-11 14:45:25,315 - __main__ - INFO - PyTorch: 2.7.0
+2025-05-11 14:45:25,315 - __main__ - INFO - NumPy: 2.2.5
+2025-05-11 14:45:25,315 - __main__ - INFO - Pandas: 2.2.3
+2025-05-11 14:45:25,315 - __main__ - INFO - 
+=== Hardware Acceleration ===
+2025-05-11 14:45:25,327 - __main__ - INFO - CUDA: False
+2025-05-11 14:45:25,327 - __main__ - INFO - MPS: True
+2025-05-11 14:45:25,327 - __main__ - INFO - MPS Built: True
+2025-05-11 14:45:25,327 - __main__ - INFO - Using device: mps
+2025-05-11 14:45:25,327 - __main__ - INFO - 
+=== Tensor Operations Test ===
+2025-05-11 14:45:25,385 - __main__ - INFO - Tensor operations working correctly on mps
+2025-05-11 14:45:25,474 - __main__ - INFO - 
+=== Image Processing Test ===
+2025-05-11 14:45:25,474 - __main__ - INFO - PIL working correctly
+2025-05-11 14:45:25,475 - __main__ - INFO - Image conversion working
+2025-05-11 14:45:25,475 - __main__ - INFO - 
+=== Cloudinary Test ===
+2025-05-11 14:45:28,315 - __main__ - INFO - Cloudinary ping successful: {'status': 'ok'}
+2025-05-11 14:45:28,315 - src.utils.cloudinary_helper - INFO - Cloudinary configured successfully
+2025-05-11 14:45:28,315 - __main__ - INFO - CloudinaryHelper initialized
+2025-05-11 14:45:28,315 - __main__ - INFO - 
+=== Fashion Model Test ===
+2025-05-11 14:45:29,578 - __main__ - INFO - Loading DINOv2 model components...
+2025-05-11 14:45:32,110 - __main__ - INFO - Model loaded successfully
+2025-05-11 14:45:32,115 - __main__ - INFO - Running inference...
+2025-05-11 14:45:32,192 - __main__ - INFO - Feature extraction successful. Output shape: torch.Size([1, 257, 384])
+2025-05-11 14:45:32,197 - __main__ - INFO - Memory management working
+2025-05-11 14:45:32,197 - __main__ - INFO - 
+=== Sentence-Transformers Test ===
+2025-05-11 14:45:32,244 - __main__ - INFO - Loading sentence-transformers model...
+2025-05-11 14:45:32,244 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-05-11 14:45:38,880 - huggingface_hub.file_download - WARNING - Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+2025-05-11 14:46:00,631 - __main__ - INFO - Model loaded on device: mps
+2025-05-11 14:46:00,631 - __main__ - INFO - Testing text embedding...
+2025-05-11 14:46:02,158 - __main__ - INFO - Embedding shape: (3, 384)
+2025-05-11 14:46:02,158 - __main__ - INFO - Embedding dimension: 384
+2025-05-11 14:46:02,160 - __main__ - INFO - Cosine similarity calculation working
+2025-05-11 14:46:02,161 - __main__ - INFO - 
+=== TextEmbedder Test ===
+2025-05-11 14:46:02,163 - __main__ - INFO - Initializing TextEmbedder...
+2025-05-11 14:46:02,163 - src.models.text_embedder - INFO - Initializing text embedder with model: all-MiniLM-L6-v2
+2025-05-11 14:46:02,163 - src.models.text_embedder - INFO - Using device: mps
+2025-05-11 14:46:02,164 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-05-11 14:46:09,774 - src.models.text_embedder - INFO - Text embedder initialized. Embedding dimension: 384
+2025-05-11 14:46:09,774 - __main__ - INFO - Text description: 'red t-shirt for men for casual wear. cotton crew neck tee'
+2025-05-11 14:46:10,465 - __main__ - INFO - Generated embedding shape: (1, 384)
+2025-05-11 14:46:10,475 - __main__ - INFO - Batch embedding shape: (3, 384)
+2025-05-11 14:46:10,475 - __main__ - INFO - 
+=== Test Summary ===
+2025-05-11 14:46:10,475 - __main__ - INFO - Tensor Operations: PASSED
+2025-05-11 14:46:10,475 - __main__ - INFO - Image Processing: PASSED
+2025-05-11 14:46:10,475 - __main__ - INFO - Cloudinary: PASSED
+2025-05-11 14:46:10,475 - __main__ - INFO - Fashion Model: PASSED
+2025-05-11 14:46:10,475 - __main__ - INFO - Sentence-Transformers: PASSED
+2025-05-11 14:46:10,475 - __main__ - INFO - Text Embedder: PASSED
+2025-05-11 14:46:10,475 - __main__ - INFO - 
+Environment test completed successfully!

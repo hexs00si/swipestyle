@@ -10,6 +10,10 @@ torch>=2.2.0  # Minimum version for stable MPS support
 transformers>=4.34.0
 accelerate>=0.24.0  # Helps with device management
 
+# NLP dependencies
+sentence-transformers>=2.2.2
+tokenizers>=0.13.3
+
 # API and web
 fastapi>=0.95.0
 uvicorn>=0.22.0

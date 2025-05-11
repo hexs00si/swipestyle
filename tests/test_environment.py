@@ -143,6 +143,86 @@ def test_fashion_model(device):
         logger.error(f"Model test failed: {e}")
         return False
 
+def test_sentence_transformers(device_type):
+    """Test sentence-transformers for text embeddings"""
+    logger.info("\n=== Sentence-Transformers Test ===")
+    try:
+        from sentence_transformers import SentenceTransformer
+        
+        # Try to load the model
+        logger.info("Loading sentence-transformers model...")
+        model = SentenceTransformer("all-MiniLM-L6-v2", device=device_type)
+        logger.info(f"Model loaded on device: {device_type}")
+        
+        # Test basic embedding
+        test_sentences = [
+            "red t-shirt for men",
+            "blue jeans for women",
+            "casual summer dress"
+        ]
+        
+        logger.info("Testing text embedding...")
+        embeddings = model.encode(test_sentences, convert_to_numpy=True)
+        logger.info(f"Embedding shape: {embeddings.shape}")
+        logger.info(f"Embedding dimension: {model.get_sentence_embedding_dimension()}")
+        
+        # Test similarity
+        from sklearn.metrics.pairwise import cosine_similarity
+        similarities = cosine_similarity(embeddings)
+        logger.info("Cosine similarity calculation working")
+        
+        # Memory cleanup
+        del model, embeddings
+        if device_type == "mps":
+            torch.mps.empty_cache()
+        elif device_type == "cuda":
+            torch.cuda.empty_cache()
+        
+        return True
+    except Exception as e:
+        logger.error(f"Sentence-transformers test failed: {e}")
+        return False
+
+def test_text_embedder():
+    """Test the custom TextEmbedder class"""
+    logger.info("\n=== TextEmbedder Test ===")
+    try:
+        from src.models.text_embedder import TextEmbedder
+        
+        # Initialize embedder
+        logger.info("Initializing TextEmbedder...")
+        embedder = TextEmbedder()
+        
+        # Test metadata to text conversion
+        test_metadata = {
+            'gender': 'Men',
+            'base_color': 'Red',
+            'article_type': 'T-shirt',
+            'usage': 'Casual',
+            'product_name': 'Cotton Crew Neck Tee'
+        }
+        
+        text_description = embedder.create_item_text(test_metadata)
+        logger.info(f"Text description: '{text_description}'")
+        
+        # Test embedding generation
+        embeddings = embedder.embed_text(text_description)
+        logger.info(f"Generated embedding shape: {embeddings.shape}")
+        
+        # Test batch processing
+        test_texts = [
+            "red t-shirt for men",
+            "blue dress for women",
+            "black shoes"
+        ]
+        batch_embeddings = embedder.embed_text(test_texts)
+        logger.info(f"Batch embedding shape: {batch_embeddings.shape}")
+        
+        return True
+    except Exception as e:
+        logger.error(f"TextEmbedder test failed: {e}")
+        return False
+
 def test_environment():
     """Comprehensive environment test for fashion recommendation system"""
     logger.info("Starting comprehensive environment test...")
@@ -154,13 +234,18 @@ def test_environment():
     logger.info(f"NumPy: {np.__version__}")
     logger.info(f"Pandas: {pd.__version__}")
     
-    # Run tests
+    # Get device for tests
     device = test_hardware_acceleration()
+    device_type = str(device).split(':')[0]  # Extract device type (mps, cuda, cpu)
+    
+    # Run tests
     tests = {
         "Tensor Operations": test_tensor_operations(device),
         "Image Processing": test_image_processing(),
         "Cloudinary": test_cloudinary(),
-        "Fashion Model": test_fashion_model(device)
+        "Fashion Model": test_fashion_model(device),
+        "Sentence-Transformers": test_sentence_transformers(device_type),
+        "Text Embedder": test_text_embedder()
     }
     
     # Summary
